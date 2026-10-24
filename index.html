@@ -787,7 +787,7 @@ form.addEventListener('submit', async ev => {
       tulisLog('Rute terdeteksi: TikTok. Menghubungi Utama (TikWM)...');
       let success = false;
 
-      // Percobaan 1: TikWM API
+      // Percobaan 1: TikWM API Engine
       try {
         const ttApi = `https://www.tikwm.com/api/?url=${encodeURIComponent(inputUrl)}`;
         tulisLog('GET: ' + ttApi);
@@ -818,7 +818,6 @@ form.addEventListener('submit', async ev => {
 
             dlButtons.innerHTML = btnHtml;
             tulisLog('Sukses via Engine Utama!');
-            success = true;
             return;
           }
         }
@@ -826,9 +825,71 @@ form.addEventListener('submit', async ev => {
         tulisLog('Engine Utama gagal/diblokir ISP. Mengalihkan ke Backup Engine...');
       }
 
-      // Jika TikWM Gagal / Kena Blokir ISP di HP Temenmu, Kode Otomatis Lanjut ke Azbry Engine di Bawah
-      if (!success) {
-        tulisLog('Menggunakan Fallback Engine (Azbry TikTok)...');
+      // Percobaan 2: Fallback ke Azbry Engine jika TikWM Gagal/Diblokir ISP
+      tulisLog('Menggunakan Fallback Engine (Azbry TikTok)...');
+      try {
+        const fallbackApi = `https://api.azbry.com/api/download/allinonev2?url=${encodeURIComponent(inputUrl)}`;
+        tulisLog('GET: ' + fallbackApi);
+        
+        const resFb = await fetch(fallbackApi);
+        if(resFb.ok) {
+          const jsonFb = await resFb.json();
+          const pFb = jsonFb.result || jsonFb.data || jsonFb;
+          
+          if (pFb) {
+            resultTitle.textContent = 'Media TikTok Ditemukan! (Backup Engine)';
+            mediaTitle.textContent = pFb.title || pFb.caption || 'TikTok Video';
+            
+            if (pFb.thumbnail || pFb.cover) {
+              thumb.src = pFb.thumbnail || pFb.cover;
+              thumb.style.display = 'block';
+            }
+
+            let btnHtml = '';
+            
+            // Ekstraksi video dari Azbry
+            const links = pFb.downloads || pFb.video || pFb.url || [];
+            if (Array.isArray(links)) {
+              links.forEach((l, i) => {
+                const lUrl = typeof l === 'object' ? (l.url || l.link) : l;
+                if (lUrl && typeof lUrl === 'string' && lUrl.startsWith('http')) {
+                  btnHtml += `<a href="${lUrl}" target="_blank" download rel="noopener noreferrer" class="btn-dl">📹 Download Video ${i > 0 ? '#' + (i + 1) : '(No WM)'}</a>`;
+                }
+              });
+            } else if (typeof links === 'string' && links.startsWith('http')) {
+              btnHtml += `<a href="${links}" target="_blank" download rel="noopener noreferrer" class="btn-dl">📹 Download Video (No WM)</a>`;
+            }
+
+            // Ekstraksi audio dari Azbry
+            const audioUrl = pFb.audio || pFb.mp3 || pFb.music;
+            if (audioUrl && typeof audioUrl === 'string') {
+              btnHtml += `<a href="${audioUrl}" target="_blank" download rel="noopener noreferrer" class="btn-dl sec">🎵 Download Audio (MP3)</a>`;
+            }
+
+            // Jika format di atas kosong, gunakan pemindai rekursif (Deep Extractor)
+            if (!btnHtml) {
+              const extractedFb = deepExtractLinks(pFb, inputUrl);
+              if (extractedFb.videos.length > 0) {
+                extractedFb.videos.forEach((vLink, idx) => {
+                  btnHtml += `<a href="${vLink}" target="_blank" download rel="noopener noreferrer" class="btn-dl">📹 Download Video #${idx + 1}</a>`;
+                });
+              }
+              if (extractedFb.audios.length > 0) {
+                extractedFb.audios.forEach(aLink => {
+                  btnHtml += `<a href="${aLink}" target="_blank" download rel="noopener noreferrer" class="btn-dl sec">🎵 Download Audio (MP3)</a>`;
+                });
+              }
+            }
+
+            if (btnHtml) {
+              dlButtons.innerHTML = btnHtml;
+              tulisLog('Fallback sukses merender tombol download!');
+              return;
+            }
+          }
+        }
+      } catch (fbErr) {
+        tulisLog('Fallback Engine juga mengalami kendala: ' + fbErr.message);
       }
     }
 
