@@ -628,6 +628,57 @@ footer a {
   input[type=url] { flex-basis: 100%; width: 100%; }
   button.submit { width: 100%; }
 }
+
+  /* Styling Banner APK MediaFire */
+.apk-banner {
+  background: var(--panel, #ffffff);
+  border: 3px solid var(--border, #18181b);
+  box-shadow: 5px 5px 0px #18181b;
+  border-radius: 16px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.apk-info h3 {
+  font-size: 15px;
+  font-weight: 900;
+  margin-bottom: 4px;
+}
+
+.apk-info p {
+  font-size: 12px;
+  color: var(--muted, #52525b);
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.btn-apk {
+  background: var(--green, #37e8b0);
+  color: var(--border, #18181b);
+  border: 2.5px solid var(--border, #18181b);
+  box-shadow: 3px 3px 0px #18181b;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 800;
+  border-radius: 10px;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.1s ease;
+}
+
+.btn-apk:hover {
+  background: #10b981;
+}
+
+.btn-apk:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px #18181b;
+}
 </style>
 </head>
 <body>
@@ -665,6 +716,15 @@ footer a {
     <div class="eyebrow">ALLHUB DOWNLOADER</div>
     <h1>Download video sosmed.<br><span>Tanpa ribet, sekali klik.</span></h1>
     <p class="lead">Masukkan tautan video publik dari TikTok, Instagram, YouTube, Facebook, Twitter, atau Pinterest. Sistem akan otomatis mengekstrak berkas media terbaik.</p>
+
+<!-- Banner Download Versi APK -->
+<div class="apk-banner">
+  <div class="apk-info">
+    <h3>📱 Versi Aplikasi Android</h3>
+    <p>Download AllHub-Downloader.apk</p>
+  </div>
+  <a href="https://www.mediafire.com/file/0cwl5yqe5wse7wb/AllHub-Downloader.apk/file" target="_blank" class="btn-apk">📥 DOWNLOAD APK</a>
+</div>
     
     <div class="panel">
       <form id="dlForm">
