@@ -784,45 +784,51 @@ form.addEventListener('submit', async ev => {
     // 1. ROUTE KHUSUS TIKTOK (TikWM Engine)
     // ==========================================
     if (isTikTok) {
-      tulisLog('Rute terdeteksi: TikTok. Menggunakan TikWM API...');
-      const ttApi = `https://www.tikwm.com/api/?url=${encodeURIComponent(inputUrl)}`;
-      tulisLog('GET: ' + ttApi);
+      tulisLog('Rute terdeteksi: TikTok. Menghubungi Utama (TikWM)...');
+      let success = false;
 
-      const res = await fetch(ttApi);
-      if(!res.ok) throw new Error('Gagal terhubung ke TikTok Engine.');
-      const json = await res.json();
+      // Percobaan 1: TikWM API
+      try {
+        const ttApi = `https://www.tikwm.com/api/?url=${encodeURIComponent(inputUrl)}`;
+        tulisLog('GET: ' + ttApi);
 
-      if (json.code === 0 && json.data) {
-        const d = json.data;
-        resultTitle.textContent = 'Media TikTok Ditemukan!';
-        mediaTitle.textContent = d.title || 'TikTok Video';
-        if(d.author) mediaAuthor.textContent = 'Oleh: @' + (d.author.unique_id || d.author.nickname || 'tiktok');
+        const res = await fetch(ttApi);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.code === 0 && json.data) {
+            const d = json.data;
+            resultTitle.textContent = 'Media TikTok Ditemukan!';
+            mediaTitle.textContent = d.title || 'TikTok Video';
+            if(d.author) mediaAuthor.textContent = 'Oleh: @' + (d.author.unique_id || d.author.nickname || 'tiktok');
 
-        if(d.cover) {
-          thumb.src = d.cover;
-          thumb.style.display = 'block';
+            if(d.cover) {
+              thumb.src = d.cover;
+              thumb.style.display = 'block';
+            }
+
+            let btnHtml = '';
+            if (d.play) btnHtml += `<a href="${d.play}" target="_blank" download rel="noopener noreferrer" class="btn-dl">📹 Download Video (No WM)</a>`;
+            if (d.hdplay) btnHtml += `<a href="${d.hdplay}" target="_blank" download rel="noopener noreferrer" class="btn-dl hd">🚀 Download Video HD</a>`;
+            if (d.music) btnHtml += `<a href="${d.music}" target="_blank" download rel="noopener noreferrer" class="btn-dl sec">🎵 Download Audio (MP3)</a>`;
+            if (d.images && Array.isArray(d.images)) {
+              d.images.forEach((imgUrl, i) => {
+                btnHtml += `<a href="${imgUrl}" target="_blank" download rel="noopener noreferrer" class="btn-dl">🖼️ Download Foto #${i + 1}</a>`;
+              });
+            }
+
+            dlButtons.innerHTML = btnHtml;
+            tulisLog('Sukses via Engine Utama!');
+            success = true;
+            return;
+          }
         }
+      } catch (e) {
+        tulisLog('Engine Utama gagal/diblokir ISP. Mengalihkan ke Backup Engine...');
+      }
 
-        let btnHtml = '';
-
-        if (d.play) {
-          btnHtml += `<a href="${d.play}" target="_blank" download rel="noopener noreferrer" class="btn-dl">📹 Download Video (No WM)</a>`;
-        }
-        if (d.hdplay) {
-          btnHtml += `<a href="${d.hdplay}" target="_blank" download rel="noopener noreferrer" class="btn-dl hd">🚀 Download Video HD</a>`;
-        }
-        if (d.music) {
-          btnHtml += `<a href="${d.music}" target="_blank" download rel="noopener noreferrer" class="btn-dl sec">🎵 Download Audio (MP3)</a>`;
-        }
-        if (d.images && Array.isArray(d.images)) {
-          d.images.forEach((imgUrl, i) => {
-            btnHtml += `<a href="${imgUrl}" target="_blank" download rel="noopener noreferrer" class="btn-dl">🖼️ Download Foto #${i + 1}</a>`;
-          });
-        }
-
-        dlButtons.innerHTML = btnHtml;
-        tulisLog('Sukses! Tombol TikTok dirender lengkap.');
-        return;
+      // Jika TikWM Gagal / Kena Blokir ISP di HP Temenmu, Kode Otomatis Lanjut ke Azbry Engine di Bawah
+      if (!success) {
+        tulisLog('Menggunakan Fallback Engine (Azbry TikTok)...');
       }
     }
 
